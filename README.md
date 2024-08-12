@@ -42,6 +42,7 @@ Achievements
 
 
 | SERVICE PROVIDER based current checks |
+| --- |
 | show pfe terse |
 | --- |
 | show chassis fpc |
