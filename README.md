@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/8159b9ec-3b5c-462c-8a99-3c136e873961)# junos-jsnapy-examples
+# junos-jsnapy-examples
 Juniper JSNAPy Pre/Post checks Automation Examples
 
 
@@ -37,18 +37,43 @@ Achievements
 •	The JSNAPy "snap-pre" functionality was used capture the golden operational state and save the snapshotted .xml files in the correct project directory by creating a separate jsnapy.cfg file in each project directory.  
 •	The JSNAPy "check" functionality was used to compare running operational states to the golden state and display modifications that may have caused a failure in the network.  
 
-parameter	type	required	default	choices	comments
-action	str	yes	none	•	check
-•	snapcheck
-•	snap_pre
-•	snap_post	The JSNAPy action to perform.
-config_file	path	no	none		The filename of a JSNAPy configuration file (in YAML format). The test_files option and the config_file option are mutually exclusive. Either the test_files option or the config_file option is required.
-dir	path	no	/etc/jsnapy/testfiles		The path to the directory containing the JSNAPy test file(s) specified by the test_files option or the JSNAPy configuration file specified by the config_file option.
+![image](https://github.com/user-attachments/assets/8159b9ec-3b5c-462c-8a99-3c136e873961)
 
-aliases: directory
-test_files	list of path	no	none		The filename of file(s) in the dir directory. Each file contains JSNAPy test case definitions. The test_files option and the config_file option are mutually exclusive. Either the test_files option or the config_file option is required.
-		
-			
+
+
+|  SERVICE PROVIDER based current checks |
+| show pfe terse |
+| --- |
+| show chassis fpc |
+| --- |
+| show chassis fpc pic-status |
+| --- |
+| show interface terse | no-more |
+| --- |
+| show ospf nei | resolve | no-more |
+| --- |
+| show rsvp nei | resolve | no-more |
+| --- |
+| show bgp summ | resolve | no-more |
+| --- |
+| show route summary | no-more |
+| --- |
+| show route | count |
+| --- |
+| show ldp neighbor | resolve | no-more |
+| --- |
+| show interface description | no-more |
+| --- |
+| show mpls lsp ingress | resolve | no-more |
+| --- |
+| show l2circuit connection | resolve | no-more |
+| --- |
+
+
+![image](https://github.com/user-attachments/assets/c0957c02-261a-4c22-a757-25c810e95e87)
+
+
+   
 References
 https://hub.docker.com/r/juniper/pyez-ansible/
 https://galaxy.ansible.com/juniper/junos
