@@ -4,18 +4,20 @@ Juniper JSNAPy Pre/Post checks Automation Examples
 
 •	Achievements
 •	Pre/Post checks 
-o	JSNAPy 
-	SERVICE PROVIDER based current checks.
-	JSNAPy based checks
-	JSNAPy detailed command/output mapping
+	o	JSNAPy 
+			SERVICE PROVIDER based current checks.
+			JSNAPy based checks
+			JSNAPy detailed command/output mapping
 •	References
 •	Docker image 
-o	Customized image 
-o	How to Install / Load Docker image
-o	Execute  
-	Map local drive to Docker image
-	Login to Docker 
-	Execute playbook
+	o	Customized image 
+	o	How to Install / Load Docker image
+	o	Execute  
+			Map local drive to Docker image
+			Login to Docker 
+			Execute playbook
+
+
 
 Achievements
 1.	Ansible Tower based playbook.
