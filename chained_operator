@@ -1,0 +1,111 @@
+**CHAINED OPERATORS EXAMPLE**
+
+  test_voice_vrf_route:
+  - command: show route forwarding-table destination 172.27.1.2 table VOICE family inet
+  - iterate:
+      xpath: //nh
+      id: via
+      tests:
+        - OR:
+          - is-equal: via, et-0/0/9.1
+            ignore-null: True
+            info:  "Test Succeeded !! next hop is via <{{id_0}}>"
+            err:  "Test Failed !! next hop is via <{{id_0}}>"
+          - is-equal: via, et-0/0/8.1
+            ignore-null: True
+            info:  "Test Succeeded !! next hop is via <{{id_0}}>"
+            err:  "Test Failed !! next hop is via <{{id_0}}>"
+
+[ken.i.montgomery.adm@s7-utility ~]$ jsnapy --snapcheck -f /mnt/configs/jsnapy/jsnapy_config_router_r1.yml -v
+jsnapy.cfg file location used : /etc/jsnapy
+Configuration file location used : /etc/jsnapy
+Connecting to device 172.31.7.13 ................
+Tests Included: test_voice_vrf_route
+Taking snapshot of COMMAND: show route forwarding-table destination 172.27.1.2 table VOICE family inet
+**************************** Device: 172.31.7.13 ****************************
+Tests Included: test_voice_vrf_route
+ Command: show route forwarding-table destination 172.27.1.2 table VOICE family inet
+----------------------Performing is-equal Test Operation----------------------
+SKIPPING!! Node <via> not found at xpath <//nh> for IDs: {'via': None}
+Test Failed !! next hop is via <et-0/0/8.1>
+Test Failed !! next hop is via <et-0/0/8.1>
+FAIL | All "via" is not equal to "et-0/0/9.1" [ 0 matched / 2 failed ]
+----------------------Performing is-equal Test Operation----------------------
+SKIPPING!! Node <via> not found at xpath <//nh> for IDs: {'via': None}
+Test Succeeded !! next hop is via <et-0/0/8.1>
+Test Succeeded !! next hop is via <et-0/0/8.1>
+PASS | All "via" is equal to "et-0/0/8.1" [ 2 matched ]
+------------------------------- Final Result!! -------------------------------
+test_voice_vrf_route : Passed
+Total No of tests passed: 1
+Total No of tests failed: 1
+Overall Tests passed!!!
+
+
+
+Example 1:
+Test passes if (condition1 AND condition2 is true).
+ 
+#### this will check BGP for peer-state and peer-as
+ 
+  - iterate:
+      xpath: '/bgp-information/bgp-peer'
+      id: peer-address
+      tests:
+        - AND:
+            - no-diff: peer-state
+              err: "BGP peering state check failed! ===> the session state for BGP peer <{{pre['peer-address']}}> changed."
+              info: "BGP peering state unchagned - test passed."
+              ignore-null: True
+            - no-diff: peer-as
+              err: "BGP neighbor AS check failed! ===> AS for <{{id_0}}> has changed."
+              info: "BGP neighbor AS unchanged - test passed."
+              ignore-null: True
+ 
+ 
+#### this will check OSPF database for (lsa-id and lsa-type) and advertising-router
+check_ospf_database:
+  - rpc: get-ospf-database-information
+  - iterate:
+      xpath: ospf-database
+      id: lsa-id
+      tests:
+        - AND:
+            - AND:
+                - no-diff: lsa-id
+                  err: "OSPF db check failed! ===> lsa entry <{{id_0}}> has changed."
+                  info: "OSPF db entry unchanged - test passed."
+                  ignore-null: True
+                - no-diff: lsa-type
+                  err: "OSPF db check failed! ===> lsa type for <{{id_0}}> has changed."
+                  info: "OSPF db entry unchanged - test passed."
+                  ignore-null: True
+            - no-diff: advertising-router
+              err: "OSPF db check failed! ===> the advertising router for <{{id_0}}> has changed."
+              info: "OSPF db entry unchanged - test passed."
+              ignore-null: True
+ 
+Example 2:
+Test passes if ( (condition1 OR condition2 is true) AND (condition3 is true) ).
+ 
+#### this will check OSPF database for (lsa-id and lsa-type) and advertising-router
+check_ospf_database:
+  - rpc: get-ospf-database-information
+  - iterate:
+      xpath: ospf-database
+      id: lsa-id
+      tests:
+        - AND:
+            - AND:
+                - no-diff: lsa-id
+                  err: "OSPF db check failed! ===> lsa entry <{{id_0}}> has changed."
+                  info: "OSPF db entry unchanged - test passed."
+                  ignore-null: True
+                - no-diff: lsa-type
+                  err: "OSPF db check failed! ===> lsa type for <{{id_0}}> has changed."
+                  info: "OSPF db entry unchanged - test passed."
+                  ignore-null: True
+            - no-diff: advertising-router
+              err: "OSPF db check failed! ===> the advertising router for <{{id_0}}> has changed."
+              info: "OSPF db entry unchanged - test passed."
+              ignore-null: True
