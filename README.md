@@ -25,7 +25,14 @@ JSNAPy 1.3.8 has been released and is now available on https://pypi.org/project/
 •	The JSNAPy "snap-pre" functionality was used capture the golden operational state and save the snapshotted .xml files in the correct project directory by creating a separate jsnapy.cfg file in each project directory.  
 •	The JSNAPy "check" functionality was used to compare running operational states to the golden state and display modifications that may have caused a failure in the network.  
 
-![image](https://github.com/user-attachments/assets/8159b9ec-3b5c-462c-8a99-3c136e873961)
+
+
+| parameter | type | required | default | choices | comments |
+| --- | --- | --- | --- | --- | --- |
+| action | str | yes | none | •check  •snapcheck •snap_pre •snap_post |	The JSNAPy action to perform. |
+| config_file | path | no | none | | The filename of a JSNAPy configuration file (in YAML format). The test_files option and the config_file option are mutually exclusive. Either the test_files option or the config_file option is required. |
+| dir | path | no | /etc/jsnapy/testfiles | | The path to the directory containing the JSNAPy test file(s) specified by the test_files option or the JSNAPy configuration file specified by the config_file option. aliases: directory |
+| test_files | list of path | no | none | | The filename of file(s) in the dir directory. Each file contains JSNAPy test case definitions. The test_files option and the config_file option are mutually exclusive. Either the test_files option or the config_file option is required. |
 
 
 
@@ -61,7 +68,30 @@ JSNAPy 1.3.8 has been released and is now available on https://pypi.org/project/
 
 JSNAPy based checks
 
-![image](https://github.com/user-attachments/assets/485e55ce-7e51-4014-8a42-a21ecec838ff)
+| JSNAPy based checks |
+| --- | 
+| show system core-dumps. |
+| show bgp summary (Group count / Neighbor count / Active-prefix-count delta 5% / bgp-rib-state / peer-state / peer-as) |
+| show lldp neighbors (local-interface and parent interface) |
+| show lacp interfaces (activity status) |
+| show rsvp interface (interface count and status) |
+| show ldp interface (neighbor count / interface and address mapping) |
+| show chassis hardware (serial-number change) |
+| show chassis fpc pic-status (fpc and pic status) |
+| show chassis alarms (list) |
+| show system alarms (list) |
+| show route summary (active-route-count 2% delta / hidden-route-count / protocol change) |
+| show bfd session (state change) |
+| show interfaces (physical oper state / logical address family and IP address) |
+| show chassis environment (status) |
+| show chassis routing-engine (mastership / installed memory size) |
+| show ospf neighbor (list / neighbor state) |
+| show ospf interface (neighbor count / ospf area) |
+| show ospf database (lsa-id and type / advertising-router) |
+| show mpls lsp (lsp-state and list) |
+| show l2circuit connection (list and connection-status) |
+
+
 
 
 JSNAPy detailed command/output mapping
