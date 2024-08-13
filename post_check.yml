@@ -1,0 +1,123 @@
+# <*******************
+#
+# Copyright 2020 Juniper Networks, Inc. All rights reserved.
+# Licensed under the Juniper Networks Script Software License (the "License").
+# You may not use this script file except in compliance with the License, which is located at
+# http://www.juniper.net/support/legal/scriptlicense/
+# Unless required by applicable law or otherwise agreed to in writing by the parties, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#
+# *******************>
+
+# =============================================================================
+#
+#    - take Jsnapy snapshot - "post" and compare
+#    - capture device configuration - "post"
+#    - capture device facts - "post"
+#
+# =============================================================================
+#
+---
+
+- name: Junos POST-check procedure - step 1.
+  hosts: CPC
+  roles:
+    - juniper.junos
+
+
+  pre_tasks:
+    - name: Git grab config repo
+      delegate_to: 127.0.0.1
+      ansible.builtin.git:
+        repo: 'https://gitlab-ci-token:BPj_KnCAWmVosk-RWFwu@gitlab.dna.networks.au.singtelgroup.net/ipne/ansible/juniper-cpc-prepost-checks.git'
+        dest: "juniper-cpc-prepost-checks"
+        clone: yes
+      run_once: yes
+
+  tasks:
+    - name: Checking if Pre-checks performed on the PTW
+      stat:
+        path: "{{ config_dir }}/{{ PTW_Number }}"
+      register: register_name
+      
+    - name: Fail test if No Pre-checks performed
+      ansible.builtin.fail:
+        msg: NO PRE-CHECK performed on this PTW,Please perform PRE-TEST first.
+      when: not register_name.stat.exists
+
+    - name: Creating build and logging directories in preparation of the Junos upgrade.
+      import_role:
+        name: set-up_env
+
+    - name: Clean up log file
+      shell: "> {{ jsnapy_dir }}/jsnapy.log"
+
+
+
+    - name: Collecting post-check node configuration and additional commands.
+      juniper_junos_command:
+        commands:
+          - "show version"
+          - "show system uptime"
+          - "show interface terse"
+          - "show configuration"
+        dest_dir: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/post"
+
+
+    - name: Collecting the post-check node facts.
+      juniper_junos_facts:
+        config_format: text
+        savedir: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/post"
+
+
+    - name: Taking a post-check snapshot and evaluating it.
+      juniper_junos_jsnapy:
+        action: snap_post
+        dir: "{{ jsnapy_dir }}/testfiles/"
+        test_files: pre_post_checks.yml
+        logfile: jsnapy/logs/jsnapy_post-upgrade.log
+
+
+    - name: Comparing pre and post upgrade Jsnapy snapshots.
+      juniper_junos_jsnapy:
+        action: check
+        dir: "{{ jsnapy_dir }}/testfiles/"
+        test_files: pre_post_checks.yml
+      register: test_result
+
+    - name: Writing jsnapy test details for to file.
+      copy:
+        content: "{{ test_result }}"
+        dest: "{{ jsnapy_dir }}/logs/jsnapy_check.log"
+        mode: '755'
+
+    - name: Writing jsnapy test details for to file.              
+      copy:                                                       
+        content: "{{ test_result | to_nice_json }}"                              
+        dest: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/post/jsnapy_result.json"
+        mode: '755'
+
+    - debug:
+        var: test_result.msg
+
+    - debug:
+        var: test_result
+
+    - name: Evaluating jsnapy test results.
+      assert:
+        that:
+          - "test_result.passPercentage >= 90"
+
+    - name: Push to Git Repo
+      shell:
+        cmd: |
+          git add .
+          git config --global user.name {{ tower_user_first_name }} {{tower_user_last_name}}
+          git config --global user.email {{ tower_user_email }}
+          git commit -m "Updated by Ansible Job {{ tower_job_id }} by {{ tower_user_first_name }} {{tower_user_last_name}} with POST-CHECK results"
+          git push origin main
+      args:
+        chdir: "juniper-cpc-prepost-checks"
+      run_once: yes
+      delegate_to: 127.0.0.1
+

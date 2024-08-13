@@ -1,0 +1,385 @@
+#=========================================================================================
+#=========================================================================================
+
+mpls_lsp mpls_lsp:
+  - command: show mpls lsp detail
+  - iterate:
+      xpath: rsvp-session-data/rsvp-session/mpls-lsp
+      tests:
+        - is-in: lsp-state, Up
+          err: ' MPLS LSP with name {{post["name"]}} to {{post["destination-address"]}} has LSP state {{post["lsp-state"]}}.'
+          info: MPLS LSP state is Up 
+          ignore-null: True
+
+        - list-not-less:
+          err: 'MPLS LSP gone missing: with name {{post["name"]}} to {{post["destination- address"]}}'
+          info: MPLS LSP list check 
+          ignore-null: True
+
+
+#=========================================================================================            
+#=========================================================================================            
+                                                                                            
+l2circuit:
+  - command: show l2circuit connections
+  - iterate:
+      id: connection-id
+      xpath: l2circuit-neighbor/connection
+      tests:
+        - list-not-less:
+          err: 'l2circuit interface gone missing: {{pre["connection-id"]}}' 
+          info: l2circuit interface list check
+          ignore-null: True
+#        - is-equal: connection-status, Up
+#          err: l2circuit neighbor on {{post["connection-id"]}} is not up, rather {{post["connection-status"]}}
+#          info: All l2circuit neighbors are up
+
+
+#=========================================================================================
+#=========================================================================================
+
+check_core_dumps:
+  - rpc: get-system-core-dumps
+  - iterate:
+      xpath: '/directory-list/directory/file-information'
+      id: file-name
+      tests:
+        - list-not-more: file-name
+          err: "Core file check failed! ===> there is a new core file  on <{{id_0}}>."
+          info: "No new core files detected - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_bgp:
+  - rpc: get-bgp-summary-information
+  - iterate:
+      xpath: '/bgp-information'
+      id: group-count, peer-count
+      tests:
+        - no-diff: group-count
+          err: "BGP groups check failed! ===> number of BGP groups changed from <{{pre['group-count']}}> to <{{post['group-count']}}>."
+          info: "BGP groups unchanged - test passed."
+          ignore-null: True
+        - no-diff: peer-count
+          err: "Active BGP neighor count check failed! ===> active BGP peer count changed from <{{pre['peer-count']}}> to <{{post['peer-count']}}>."
+          info: "Active BGP peers unchanged - test passed."
+          ignore-null: True
+  - iterate:
+      xpath: '/bgp-information/bgp-rib'
+      id: name
+      tests:
+        - delta: active-prefix-count, 5%
+          err: "Active prefix check for <{{id_0}}> failed! ===> number of active prefixes changed by more than 10%"
+          info: "Active prefix within limits - test passed."
+          ignore-null: True
+        - no-diff: bgp-rib-state
+          err: "RIB state check failed! ===> the RIB state for <{{id_0}}> changed."
+          info: "RIB state unchanged - test passed."
+          ignore-null: True
+  - iterate:
+      xpath: '/bgp-information/bgp-peer'
+      id: peer-address
+      tests:
+        - AND:
+            - no-diff: peer-state
+              err: "BGP peering state check failed! ===> the session state for BGP peer <{{pre['peer-address']}}> changed."
+              info: "BGP peering state unchagned - test passed."
+              ignore-null: True
+            - no-diff: peer-as
+              err: "BGP neighbor AS check failed! ===> AS for <{{id_0}}> has changed."
+              info: "BGP neighbor AS unchanged - test passed."
+              ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_lldp_neighbors:
+  - rpc: get-lldp-neighbors-information
+  - iterate:
+      xpath: '/lldp-neighbors-information/lldp-neighbor-information'
+      id: lldp-local-port-id, lldp-local-parent-interface-name
+      tests:
+        - no-diff: lldp-local-port-id
+          err: "LLDP neighbor information check failed! ===> LLDP neighbor on <{{id_0}}> has changed."
+          info: "LLDP neighbor information unchanged - test passed."
+          ignore-null: True
+        - no-diff: lldp-local-parent-interface-name
+          err: "LLDP neighbor information check failed! ===> LLDP neighbor on <{{id_0}}> has changed."
+          info: "LLDP neighbor information unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_lacp_interface:
+  - rpc: get-lacp-interface-information
+  - iterate:
+      xpath: '/lacp-interface-information-list/lacp-interface-information/lag-lacp-state'
+      id: ../lag-lacp-header/aggregate-name, lacp-activity
+      tests:
+        - no-diff: lacp-activity
+          err: "LACP interface state check failed! ===> LACP for LAC <{{id_0}}> has changed."
+          info: "LACP interface state unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_rsvp-interface:
+  - rpc: get-rsvp-interface-information
+  - iterate:
+      xpath: '/rsvp-interface-information/rsvp-interface'
+      id: interface-name, rsvp-status
+      tests:
+        - list-not-less:
+          err: "RSVP interface check failed! ===> Interface <{{id_0}}> is no longer a RSVP interface."
+          info: "RSVP interface configuration unchanged - test passed."
+          ignore-null: True
+        - no-diff: rsvp-status
+          err: "RSVP interface status check failed! ===> Interface <{{id_0}}>'s RSVP-status has changed."
+          info: "RSVP interface status unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_ldp_interface:
+  - rpc: get-ldp-interface-information
+  - iterate:
+      xpath: '/ldp-interface-information/ldp-interface'
+      id: interface-name
+      tests:
+        - no-diff: ldp-neighbor-count
+          err: "LDP interface neighbor count check failed! ===> LDP neighbor count on <{{id_0}}> has changed."
+          info: "LDP interface neighbor count unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_ldp_neighbor:
+  - rpc: get-ldp-neighbor-information
+  - iterate:
+      xpath: '/ldp-neighbor-information/ldp-neighbor'
+      id: interface-name
+      tests:
+        - no-diff: ldp-neighbor-address
+          err: "LDP neighbor check failed! ===> LDP neighbor <{{pre['ldp-neighbor-address']}}> has gone."
+          info: "LDP neighbors unchanged - test passed."
+          ignore-null: True
+            
+#=========================================================================================
+#=========================================================================================
+
+check_chassis_hardware_change:
+  - rpc: get-chassis-inventory
+  - iterate:
+      xpath: '/chassis-inventory/chassis/chassis-module'
+      id: name
+      tests:
+        - no-diff: serial-number
+          err: "Inventory check Failed! ===> the serial-number of FPC <{{id_0}}> has changed!"
+          info: "Chassis hardware unchanged - FPC test passed."
+          ignore-null: True
+  - iterate:
+      xpath: '/chassis-inventory/chassis/chassis-module/chassis-sub-module'
+      id: name
+      tests:
+        - no-diff: serial-number
+          err: "Inventory check Failed! ===> the serial-number of PIC/MIC <{{id_0}}> in FPC {{post['../slot']}} has changed!"
+          info: "Chassis hardware unchanged - PIC/MIC test passed."
+          ignore-null: True
+check_chassis_fpc_pic_status:
+  - rpc: get-pic-information
+  - iterate:
+      xpath: '//fpc'
+      id: slot
+      tests:
+        - no-diff: state
+          err: "Line card check failed! ===> FPC in slot <{{id_0}}> changed state!"
+          info: "FPC population unchanged - test passed."
+          ignore-null: True
+  - iterate:
+      xpath: '//fpc/pic'
+      id: pic-slot
+      tests:
+        - no-diff: pic-state
+          err: "PIC/MIC state check failed! ===> PIC/MIC <{{id_0}}> in FPC {{post['../slot']}} changed state!"
+          info: "PIC/MIC population unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_chassis_alarm_checks:
+  - rpc: get-alarm-information
+  - ignore-null: True
+  - iterate:
+      xpath: '/alarm-information'
+      id: alarm-description
+      tests:
+        - list-not-more:
+          err: "Chassis alarm check Failed! ===> new chassis alarm reported."
+          info: "No new chassis alarms reported - test passed."
+          ignore-null: True
+check_system_alarm_checks:
+  - rpc: get-system-alarm-information
+  - ignore-null: True
+  - iterate:
+      xpath: '/alarm-information'
+      id: alarm-description
+      tests:
+        - list-not-more:
+          err: "System alarm check Failed! ===> new system alarm reported."
+          info: "No new system alarms reported - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_routing_table:
+  - rpc: get-route-summary-information
+  - iterate:
+      xpath: '/route-summary-information/route-table'
+      id: table-name
+      tests:
+        - delta: active-route-count, 2%
+          err: "Routing table test for <{{id_0}}> Failed! ===> Number of active routes changed."
+          info: "Number of active routes unchanged - test passed."
+          ignore-null: True
+        - no-diff: hidden-route-count
+          err: "Routing table test for <{{id_0}}> Failed! ===> Number of hidden routes changed."
+          info: "Number of hidden routes unchanged - test passed."
+          ignore-null: True
+        - no-diff: protocols
+          err: "Protocol test in <{{id_0}}> failed! ===> protocol <{{pre['protocol-name']}}> in {{id_0}} is no longer present."
+          info: "Active protocols unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_bfd_session:
+  - rpc: get-bfd-session-information
+  - iterate:
+      xpath: '/bfd-session-information/bfd-session'
+      id: session-state
+      tests:
+        - no-diff: session-state
+          err: "BFD neighbour session state test failed!! ===> session with state {{pre['session- neighbor']}} changed to <{{post['session-state']}}>"
+          info: "BFD neighbour session state unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_interfaces:
+  - rpc: get-interface-information
+  - iterate:
+      xpath: '/interface-information/physical-interface'
+      id: name
+      tests:
+        - no-diff: oper-status
+          err: "Physical interface state check failed! ===> Int <{{id_0}} changed to <{{post['oper-status']}}>."
+          info: "State physical interface unchanged - test passed."
+          ignore-null: True
+  - iterate:
+      xpath: '/interface-information/physical-interface/logical-interface'
+      id: ../name
+      tests:
+        - no-diff: address-family/address-family-name
+          err: "Address family check failed! ===> <{{pre['address-family/address-family-name']}}> on {{id_0}} has disappeared."
+          info: "Sub-interface address families unchanged - test passed."
+          ignore-null: True
+        - no-diff: //ifa-local
+          err: "IP address check failed! ===> <{{pre['address-family/interface-address/ifa-local']}}> on {{id_0}} has changed."
+          info: "Sub-interface IP address unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_environment:
+  - rpc: get-environment-information
+  - ignore-null: True
+  - iterate:
+      xpath: '/environment-information/environment-item'
+      id: name
+      tests:
+        - no-diff: status
+          err: "Environmental check Failed! ===> Status of <{{id_0}}> has changed."
+          info: "Environmental status unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_routing_engine:
+  - rpc: get-route-engine-information
+  - iterate:
+      xpath: '/route-engine-information/route-engine'
+      id: slot
+      tests:
+        - no-diff: mastership-state
+          err: "RE Mastership check failed! ===> Routing-Engine is no longer {{pre['mastership-state']}}"
+          info: "RE Mastership unchanged - test passed."
+          ignore-null: True
+        - no-diff: memory-installed-size
+          err: "Memory check on RE <{{id_0}}> failed! ===> RE <{{id_0}}> no longer sees all {{pre['memory-installed-size']}} DRAM."
+          info: "Routing Engine available memory unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_ospf-neighbor:
+  - rpc: get-ospf-neighbor-information
+  - iterate:
+      xpath: '/ospf-neighbor-information/ospf-neighbor'
+      id: interface-name
+      tests:
+        - list-not-less:
+          err: "OSPF neighbor test failed! ===> {{pre['neighbor-id']}} on {{pre['interface-name']}} is gone."
+          info: "OSPF neighbor count unchanged - test passed."
+          ignore-null: True
+        - list-not-more:
+          err: "OSPF neighbor test failed! ===> {{post['neighbor-id']}} on {{post['interface-name']}} is new."
+          info: "OSPF neighbor count unchanged - test passed."
+          ignore-null: True
+        - no-diff: neighbor-address
+          err: "OSPF neighbor address test failed! ===> {{pre['neighbor-id']}} is no longer seen on {{post['neighbor-address']}}."
+          info: "OSPF neighbor address unchanged - test passed."
+          ignore-null: True
+        - no-diff: ospf-neighbor-state
+          err: "OSPF neighbor state test failed! ===> {{pre['neighbor-address']}} has changed to the new state of {{post['ospf-neighbor-state']}}."
+          info: "OSPF neighbor state unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_ospf_interface:
+  - rpc: get-ospf-interface-information
+  - iterate:
+      xpath: '/ospf-interface-information/ospf-interface'
+      id: interface-name
+      tests:
+        - no-diff: neighbor-count
+          err: "OSPF neighbor count test failed! ===> neighbor count on {{pre['interface-name']}} has changed."
+          info: "OSPF neighbor count unchanged - test passed."
+          ignore-null: True
+        - no-diff: ospf-area
+          err: "Interface OSPF area test failed! ===> {{pre['interface-name']}} in no longer located in area {{pre['ospf-area']}}."
+          info: "Interface OSPF area unchanged - test passed."
+          ignore-null: True
+#=========================================================================================
+#=========================================================================================
+
+check_ospf_database:
+  - rpc: get-ospf-database-information
+  - iterate:
+      xpath: ospf-database
+      id: lsa-id
+      tests:
+        - AND:
+            - AND:
+                - no-diff: lsa-id
+                  err: "OSPF db check failed! ===> lsa entry <{{id_0}}> has changed."
+                  info: "OSPF db entry unchanged - test passed."
+                  ignore-null: True
+                - no-diff: lsa-type
+                  err: "OSPF db check failed! ===> lsa type for <{{id_0}}> has changed."
+                  info: "OSPF db entry unchanged - test passed."
+                  ignore-null: True
+            - no-diff: advertising-router
+              err: "OSPF db check failed! ===> the advertising router for <{{id_0}}> has changed."
+              info: "OSPF db entry unchanged - test passed."
+              ignore-null: True

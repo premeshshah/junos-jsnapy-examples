@@ -1,0 +1,82 @@
+# <*******************
+#
+# Copyright 2020 Juniper Networks, Inc. All rights reserved.
+# Licensed under the Juniper Networks Script Software License (the "License").
+# You may not use this script file except in compliance with the License, which is located at
+# http://www.juniper.net/support/legal/scriptlicense/
+# Unless required by applicable law or otherwise agreed to in writing by the parties, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#
+# *******************>
+
+# =============================================================================
+#
+#    - create various output directories.
+#    - capture device facts - "pre"
+#    - capture device configurations - "pre"
+#    - take Jsnapy snapshot - "pre"
+#
+# =============================================================================
+#
+---
+
+- name: Junos PRE-CHECKS.
+  hosts: CPC
+  roles:
+    - juniper.junos
+
+
+
+  pre_tasks:
+    - name: Git grab config repo
+      delegate_to: 127.0.0.1
+      ansible.builtin.git:
+        repo: 'https://gitlab-ci-token:BPj_KnCAWmVosk-RWFwu@gitlab.dna.networks.au.singtelgroup.net/ipne/ansible/juniper-cpc-prepost-checks.git'
+        dest: "juniper-cpc-prepost-checks"
+        clone: yes
+      run_once: yes
+
+  tasks:
+  
+    - name: Creating build and logging directories in preparation of the Junos upgrade.
+      import_role:
+        name: set-up_env
+
+
+    - name: Collecting pre-check node facts.
+      juniper_junos_facts:
+        config_format: text
+        savedir: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/pre"
+
+
+    - name: Collecting pre-check node configuration and additional commands.
+      juniper_junos_command:
+        commands:
+          - "show version"
+          - "show system uptime"
+          - "show interface terse"
+          - "show configuration"
+        dest_dir: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/pre"
+
+
+    - name: Taking a pre-check snapshot.
+      juniper_junos_jsnapy:
+        action: snap_pre
+        dir: "{{ jsnapy_dir }}/testfiles/"
+        test_files: pre_post_checks.yml
+
+
+
+    - name: Push to Git Repo
+      shell:
+        cmd: |
+          git add .
+          git config --global user.name {{ tower_user_first_name }} {{tower_user_last_name}}
+          git config --global user.email {{ tower_user_email }}
+          git commit -m "Updated by Ansible Job {{ tower_job_id }} by {{ tower_user_first_name }} {{tower_user_last_name}} with PRE-CHECK results"
+          git push origin main
+      args:
+        chdir: "juniper-cpc-prepost-checks"
+      run_once: yes
+      delegate_to: 127.0.0.1
+

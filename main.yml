@@ -1,0 +1,26 @@
+---
+
+  - name: Creating the configuration delta directory.
+    file:
+      path: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/config_delta"
+      state: directory
+      mode: 0755
+      recurse: yes
+
+  - name: Creatting a directory for the host's snapshot files.
+    file:
+      path: "{{ jsnapy_dir }}/snapshots"
+      state: directory
+      mode: 0755
+
+  - name: Creatting a directory for the host's pre-upgrade configuration.
+    file:
+      path: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/pre"
+      state: directory
+      mode: 0755
+
+  - name: Creating a directory for the host's post-upgrade configuration.
+    file:
+      path: "{{ config_dir }}/{{ PTW_Number }}/{{ inventory_hostname }}/post"
+      state: directory
+      mode: 0755

@@ -1,0 +1,19 @@
+#credentials:
+ # host: "{{ ansible_host }}"
+ # username: "{{ ansible_user }}"
+ # password: "{{ ansible_ssh_pass }}"
+ # username: NStar1
+ # password: WEIU3m2cjBNx150lFCrG
+#  port: '22'
+#  timeout: '90'
+
+build_dir: logs/build
+info_dir: logs/info
+tmp: logs/tmp
+config_dir: juniper-cpc-prepost-checks/PTW
+jsnapy_dir: juniper-cpc-prepost-checks/jsnapy
+
+
+
+
+ansible_python_interpreter: /var/lib/awx/venv/py38_codeready//bin/python3
