@@ -1,7 +1,7 @@
 # junos-jsnapy-examples
 Juniper JSNAPy Pre/Post checks Automation Examples
 
-
+JSNAPy 1.3.8 has been released and is now available on https://pypi.org/project/jsnapy/
 
 **Achievements**
 1.	Ansible Tower based playbook.
